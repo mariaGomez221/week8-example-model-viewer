@@ -12,9 +12,9 @@
     <nav>
       <a href="#" aria-label="Home">Humber Cakes</a>
       <ul>
-        <li><a href="#products">Products</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="index.html#products">Products</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <li><a href="demo.html">Demo</a></li>
       </ul>
     </nav>
   </header>
@@ -35,55 +35,55 @@
       <h2 id="products-title">Featured Products</h2>
 
       <div class="product-list">
-        <article class="product">
+        <article class="product" id="strawberry-cake-section">
           <h3 id="product-1-title">Strawberry Cake</h3>
           <model-viewer src="assets/strawberry.glb" alt="Strawberry cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="chocolate-cake-section">
           <h3 id="product-2-title">Chocolate Cake</h3>
           <model-viewer src="assets/chocolate.glb" alt="Chocolate cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="flower-cake-section">
           <h3 id="product-3-title">Flower Cake</h3>
           <model-viewer src="assets/flower-25.glb" alt="Flower cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="carousel-cake-section">
           <h3 id="product-4-title">Carousel Cake</h3>
           <model-viewer src="assets/carousel.glb" alt="Carousel cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="macarons-cake-section">
           <h3 id="product-5-title">Macarons Cake</h3>
           <model-viewer src="assets/Macarons-cake.glb" alt="Macarons cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="pear-cake-section">
           <h3 id="product-6-title">Pear Cake</h3>
           <model-viewer src="assets/pear-cake.glb" alt="Pear cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="wedding-cake-section">
           <h3 id="product-7-title">Wedding Cake</h3>
           <model-viewer src="assets/wedding-cake.glb" alt="Wedding cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="blackforest-cake-section">
           <h3 id="product-8-title">Blackforest Cake</h3>
           <model-viewer src="assets/blackforest.glb" alt="Blackforest cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
 
-        <article class="product">
+        <article class="product" id="lantern-cake-section">
           <h3 id="product-9-title">Lantern Cake</h3>
           <model-viewer src="assets/lanterm.glb" alt="Lantern cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
@@ -140,6 +140,67 @@
       </div>
     </section>
   </main>
+
+  <footer>
+    <p>© 2025 Humber Cakes. All rights reserved.</p>
+    <p>3D Cake Designs • Custom Visualizations • Digital Baking Art</p>
+  </footer>
+
+  <!-- Popup Modals -->
+  <div id="strawberry-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A soft and elegant strawberry-inspired design featuring smooth pink tones, glossy strawberry drip, and subtle berry accents. This model highlights freshness, sweetness, and a charming, feminine aesthetic perfect for spring celebrations</p>
+    </div>
+  </div>
+
+  <div id="chocolate-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A rich and indulgent 3D model showcasing deep chocolate textures, silky ganache layering, and sleek modern edges. Dense, bold, and luxurious—this design captures the true beauty of a classic chocolate masterpiece.</p>
+    </div>
+  </div>
+
+  <div id="flower-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>Inspired by nature, this cake features handcrafted floral details, delicate petals, and graceful color gradients. The design blends artistry and elegance, making it ideal for garden events, showers, or any moment that calls for beauty.</p>
+    </div>
+  </div>
+
+  <div id="carousel-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A whimsical carousel-themed creation with rotating details, playful horses, and ornate accents. Its pastel palette and intricate structure bring a sense of magic and childhood wonder to the display—a perfect celebration centerpiece.</p>
+    </div>
+  </div>
+
+  <div id="macarons-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A refined and modern cake topped with perfectly modeled macarons. Sleek tiers, smooth finishes, and pastel macaron arrangements bring sophistication and sweetness together in a stylish, contemporary design.</p>
+    </div>
+  </div>
+
+  <div id="pear-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A unique cake inspired by pear shapes and natural curves. Soft, earthy tones and smooth textures give it a fresh, organic aesthetic that stands out with its simplicity and elegance.</p>
+    </div>
+  </div>
+
+  <div id="wedding-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A timeless wedding design with pristine tiers, delicate detailing, and a refined, romantic finish. Classic yet customizable, this model captures the beauty of traditional celebration cakes.</p>
+    </div>
+  </div>
+
+  <div id="blackforest-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A dramatic and decadent chocolate-and-cherry combination featuring whipped cream piping, chocolate curls, and deep contrasting textures. Rich in detail and full of character.</p>
+    </div>
+  </div>
+
+  <div id="lantern-popup" class="popup-overlay">
+    <div class="popup-content">
+      <p>A decorative lantern-inspired cake with carved patterns, warm glowing elements, and intricate structural accents. Cultural, artistic, and perfect for evening celebrations or themed events.</p>
+    </div>
+  </div>
+
   <script src="js/main.js"></script>
 </body>
 </html>

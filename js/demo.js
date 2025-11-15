@@ -18,9 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     rotationY: '0',
     rotationZ: '0',
     backgroundColor: '#f8f8f8',
-    backgroundImage: '',
-    autoplay: false,
-    animationSpeed: '1'
+    backgroundImage: ''
   };
 
   // Model Selection
@@ -194,25 +192,6 @@ document.addEventListener('DOMContentLoaded', function() {
     updateBackground();
   });
 
-  // Autoplay
-  const autoplay = document.getElementById('autoplay');
-  autoplay.addEventListener('change', function() {
-    if (this.checked) {
-      viewer.setAttribute('autoplay', '');
-    } else {
-      viewer.removeAttribute('autoplay');
-    }
-  });
-
-  // Animation Speed
-  const animationSpeed = document.getElementById('animation-speed');
-  const animationSpeedValue = document.getElementById('animation-speed-value');
-  animationSpeed.addEventListener('input', function() {
-    const value = parseFloat(this.value);
-    animationSpeedValue.textContent = value.toFixed(1);
-    viewer.setAttribute('animation-speed', value);
-  });
-
   // Reset Button
   const resetBtn = document.getElementById('reset-btn');
   resetBtn.addEventListener('click', function() {
@@ -295,19 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
     backgroundColorText.value = initialValues.backgroundColor;
     backgroundImage.value = initialValues.backgroundImage;
     viewer.style.background = initialValues.backgroundColor;
-
-    // Reset autoplay
-    autoplay.checked = initialValues.autoplay;
-    if (initialValues.autoplay) {
-      viewer.setAttribute('autoplay', '');
-    } else {
-      viewer.removeAttribute('autoplay');
-    }
-
-    // Reset animation speed
-    animationSpeed.value = initialValues.animationSpeed;
-    animationSpeedValue.textContent = initialValues.animationSpeed;
-    viewer.setAttribute('animation-speed', initialValues.animationSpeed);
   });
 
   // Initialize range value displays
@@ -316,6 +282,5 @@ document.addEventListener('DOMContentLoaded', function() {
   exposureValue.textContent = exposure.value;
   shadowIntensityValue.textContent = shadowIntensity.value;
   scaleValue.textContent = scale.value;
-  animationSpeedValue.textContent = animationSpeed.value;
 });
 
