@@ -46,15 +46,39 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Add click handler to product cards to view in detail
   const productCards = document.querySelectorAll('.product');
-  productCards.forEach((card, index) => {
-    card.addEventListener('click', () => {
-      // You could navigate to a detail page or open a modal here
-      console.log(`Product ${index + 1} clicked`);
-      // Example: window.location.href = `product-detail.html?id=${index + 1}`;
+  productCards.forEach((card) => {
+    card.addEventListener('click', (e) => {
+      // Don't navigate if clicking on the model-viewer directly
+      if (e.target.tagName === 'MODEL-VIEWER') {
+        return;
+      }
+      
+      // Get product data from data attributes
+      const productId = card.getAttribute('data-product');
+      const productTitle = card.getAttribute('data-title');
+      const productSrc = card.getAttribute('data-src');
+      
+      if (productId && productSrc) {
+        // Navigate to detail page with product info
+        const params = new URLSearchParams({
+          id: productId,
+          title: productTitle,
+          src: productSrc
+        });
+        window.location.href = `product-detail.html?${params.toString()}`;
+      }
     });
     
     // Make product cards more interactive
     card.style.cursor = 'pointer';
+    
+    // Prevent model-viewer from triggering card click
+    const modelViewer = card.querySelector('model-viewer');
+    if (modelViewer) {
+      modelViewer.addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+    }
   });
   
   // Smooth scroll for anchor links
