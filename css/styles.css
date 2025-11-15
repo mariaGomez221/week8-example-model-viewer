@@ -157,6 +157,18 @@ main:has(.interactive-demo) {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
+#products .intro-text {
+  margin: 0 0 32px;
+  font-size: 1.125rem;
+  color: #4a5568;
+  text-align: center;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.7;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
 #products h2 {
   margin: 0 0 32px;
   font-size: 2.25rem;
@@ -184,6 +196,10 @@ main:has(.interactive-demo) {
   
   #products {
     padding: 30px 24px;
+  }
+  
+  #products .intro-text {
+    font-size: 1rem;
   }
   
   #products h2 {
@@ -214,6 +230,11 @@ main:has(.interactive-demo) {
   
   #products {
     padding: 24px 16px;
+  }
+  
+  #products .intro-text {
+    font-size: 0.95rem;
+    padding: 0 8px;
   }
   
   #products h2 {
