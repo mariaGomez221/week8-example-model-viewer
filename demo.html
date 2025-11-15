@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Model Viewer Demo</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="index.html" aria-label="Home">Humber Cakes</a>
+      <ul>
+        <li><a href="index.html#products">Products</a></li>
+        <li><a href="index.html#about">About</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+        <li><a href="demo.html">Demo</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <div class="demo-container">
+      <div class="viewer-section">
+        <div class="demo-header">
+          <h1>Interactive Model Viewer</h1>
+          <p>Customize your 3D model experience</p>
+        </div>
+        <model-viewer
+          id="demo-viewer"
+          class="demo-viewer"
+          src="assets/strawberry.glb"
+          alt="Interactive 3D model"
+          camera-controls
+          touch-action="pan-y"
+          auto-rotate
+          ar
+          shadow-intensity="1"
+          exposure="1"
+          environment-image="neutral"
+          interaction-policy="allow-when-focused">
+        </model-viewer>
+      </div>
+
+      <div class="controls-section">
+        <h2 class="controls-title">Controls</h2>
+
+        <!-- Model Selection -->
+        <div class="control-group">
+          <h3>Model Selection</h3>
+          <div class="control-item">
+            <label for="model-select">Choose Model:</label>
+            <select id="model-select">
+              <option value="assets/strawberry.glb">Strawberry Cake</option>
+              <option value="assets/chocolate.glb">Chocolate Cake</option>
+              <option value="assets/flower-25.glb">Flower Cake</option>
+              <option value="assets/carousel.glb">Carousel Cake</option>
+              <option value="assets/Macarons-cake.glb">Macarons Cake</option>
+              <option value="assets/pear-cake.glb">Pear Cake</option>
+              <option value="assets/wedding-cake.glb">Wedding Cake</option>
+              <option value="assets/blackforest.glb">Blackforest Cake</option>
+              <option value="assets/lanterm.glb">Lantern Cake</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Camera & Interaction -->
+        <div class="control-group">
+          <h3>Camera & Interaction</h3>
+          <div class="control-item">
+            <div class="checkbox-control">
+              <input type="checkbox" id="camera-controls" checked>
+              <label for="camera-controls">Camera Controls</label>
+            </div>
+          </div>
+          <div class="control-item">
+            <div class="checkbox-control">
+              <input type="checkbox" id="auto-rotate" checked>
+              <label for="auto-rotate">Auto Rotate</label>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="auto-rotate-delay">Auto Rotate Delay (ms):</label>
+            <div class="range-control">
+              <input type="range" id="auto-rotate-delay" min="0" max="10000" value="3000" step="100">
+              <span class="range-value" id="auto-rotate-delay-value">3000</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="camera-orbit">Camera Distance:</label>
+            <div class="range-control">
+              <input type="range" id="camera-orbit" min="0.5" max="5" value="1" step="0.1">
+              <span class="range-value" id="camera-orbit-value">1.0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AR & VR -->
+        <div class="control-group">
+          <h3>AR & VR</h3>
+          <div class="control-item">
+            <div class="checkbox-control">
+              <input type="checkbox" id="ar-enabled" checked>
+              <label for="ar-enabled">AR Mode</label>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="ar-scale">AR Scale:</label>
+            <select id="ar-scale">
+              <option value="auto">Auto</option>
+              <option value="fixed">Fixed</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Lighting -->
+        <div class="control-group">
+          <h3>Lighting</h3>
+          <div class="control-item">
+            <label for="exposure">Exposure:</label>
+            <div class="range-control">
+              <input type="range" id="exposure" min="0" max="2" value="1" step="0.1">
+              <span class="range-value" id="exposure-value">1.0</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="shadow-intensity">Shadow Intensity:</label>
+            <div class="range-control">
+              <input type="range" id="shadow-intensity" min="0" max="2" value="1" step="0.1">
+              <span class="range-value" id="shadow-intensity-value">1.0</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="environment-image">Environment:</label>
+            <select id="environment-image">
+              <option value="neutral">Neutral</option>
+              <option value="">None</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Model Transform -->
+        <div class="control-group">
+          <h3>Model Transform</h3>
+          <div class="control-item">
+            <label for="scale">Scale:</label>
+            <div class="range-control">
+              <input type="range" id="scale" min="0.1" max="3" value="1" step="0.1">
+              <span class="range-value" id="scale-value">1.0</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="rotation-x">Rotation X (degrees):</label>
+            <div class="range-control">
+              <input type="range" id="rotation-x" min="0" max="360" value="0" step="1">
+              <span class="range-value" id="rotation-x-value">0°</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="rotation-y">Rotation Y (degrees):</label>
+            <div class="range-control">
+              <input type="range" id="rotation-y" min="0" max="360" value="0" step="1">
+              <span class="range-value" id="rotation-y-value">0°</span>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="rotation-z">Rotation Z (degrees):</label>
+            <div class="range-control">
+              <input type="range" id="rotation-z" min="0" max="360" value="0" step="1">
+              <span class="range-value" id="rotation-z-value">0°</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Background -->
+        <div class="control-group">
+          <h3>Background</h3>
+          <div class="control-item">
+            <label for="background-color">Background Color:</label>
+            <div class="color-input-wrapper">
+              <input type="color" id="background-color" value="#f8f8f8">
+              <input type="text" id="background-color-text" value="#f8f8f8">
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="background-image">Background Image (URL):</label>
+            <input type="text" id="background-image" placeholder="Optional: Enter image URL">
+          </div>
+        </div>
+
+        <!-- Animation -->
+        <div class="control-group">
+          <h3>Animation</h3>
+          <div class="control-item">
+            <div class="checkbox-control">
+              <input type="checkbox" id="autoplay">
+              <label for="autoplay">Autoplay Animation</label>
+            </div>
+          </div>
+          <div class="control-item">
+            <label for="animation-speed">Animation Speed:</label>
+            <div class="range-control">
+              <input type="range" id="animation-speed" min="0" max="2" value="1" step="0.1">
+              <span class="range-value" id="animation-speed-value">1.0</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="reset-btn" id="reset-btn">Reset All Settings</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/demo.js"></script>
+</body>
+</html>
+

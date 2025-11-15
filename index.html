@@ -23,9 +23,9 @@
     <section class="hero">
       <h1 id="hero-title">Delicious Designs. Perfectly Rendered.</h1>
       <p>Experience cakes like never before. Explore our interactive 3D models and discover the art behind every layer, texture, and detail.</p>
-      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+      <div class="hero-buttons">
         <a href="#products">Browse Products</a>
-        <a href="example-interactive.html">Try Interactive Demo</a>
+        <a href="demo.html">Try Interactive Demo</a>
       </div>
     </section>
 
@@ -88,6 +88,55 @@
           <model-viewer src="assets/lanterm.glb" alt="Lantern cake" 
           ar camera-controls touch-action="pan-y"></model-viewer>
         </article>
+      </div>
+    </section>
+
+    <section id="contact">
+      <h2 id="contact-title">Get in Touch</h2>
+      <p class="contact-intro">Have a question about our cakes or want to place a custom order? We'd love to hear from you!</p>
+      
+      <div class="contact-container">
+        <div class="contact-info">
+          <h3>Contact Information</h3>
+          <div class="contact-details">
+            <div class="contact-item">
+              <strong>Email:</strong>
+              <a href="mailto:info@humbercakes.com">info@humbercakes.com</a>
+            </div>
+            <div class="contact-item">
+              <strong>Phone:</strong>
+              <a href="tel:+1234567890">(123) 456-7890</a>
+            </div>
+            <div class="contact-item">
+              <strong>Address:</strong>
+              <p>123 Bakery Street<br>Toronto, ON M5H 2N2</p>
+            </div>
+            <div class="contact-item">
+              <strong>Hours:</strong>
+              <p>Monday - Friday: 9:00 AM - 6:00 PM<br>Saturday: 10:00 AM - 4:00 PM<br>Sunday: Closed</p>
+            </div>
+          </div>
+        </div>
+
+        <form class="contact-form" action="#" method="post">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" required>
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="submit-btn">Send Message</button>
+        </form>
       </div>
     </section>
   </main>
