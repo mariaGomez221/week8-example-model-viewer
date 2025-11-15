@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Example Model Viewer</title>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header>
+    <nav>
+      <a href="#" aria-label="Home">Brand</a>
+      <ul>
+        <li><a href="#products">Products</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title">Discover Our Latest Models</h1>
+      <p>Explore high-quality 3D models designed for performance and realism.</p>
+      <a href="#products">Browse Products</a>
+    </section>
+
+    <section id="products" aria-labelledby="products-title">
+      <h2 id="products-title">Featured Products</h2>
+
+      <div class="product-list">
+        <article class="product" aria-labelledby="product-1-title">
+          <h3 id="product-1-title">Product One</h3>
+          <model-viewer src="assets/strawberry.glb" alt="Strawberry cake" 
+          ar camera-controls touch-action="pan-y"></modelviewer>
+        </article>
+
+        <article class="product" aria-labelledby="product-2-title">
+          <h3 id="product-2-title">Product Two</h3>
+          <model-viewer src="assets/chocolate.glb" alt="Chocolate cake" 
+          ar camera-controls touch-action="pan-y"></modelviewer>
+        </article>
+
+        <article class="product" aria-labelledby="product-3-title">
+          <h3 id="product-3-title">Product Three</h3>
+          <model-viewer src="assets/flower-25.glb" alt="Flower cake" 
+          ar camera-controls touch-action="pan-y"></modelviewer>
+        </article>
+      </div>
+    </section>
+  </main>
+  <script src="js/main.js"></script>
+</body>
+</html>
+
