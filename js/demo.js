@@ -7,15 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
   const initialValues = {
     src: viewer.getAttribute('src') || 'assets/strawberry.glb',
     cameraControls: viewer.hasAttribute('camera-controls'),
-    autoRotate: viewer.hasAttribute('auto-rotate'),
-    autoRotateDelay: '3000',
-    ar: viewer.hasAttribute('ar'),
     exposure: viewer.getAttribute('exposure') || '1',
     shadowIntensity: viewer.getAttribute('shadow-intensity') || '1',
-    scale: '1',
-    rotationX: '0',
-    rotationY: '0',
-    rotationZ: '0',
     backgroundColor: '#f8f8f8'
   };
 
@@ -23,11 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const modelSelect = document.getElementById('model-select');
   modelSelect.addEventListener('change', function() {
     viewer.src = this.value;
-    // Reapply transforms when new model loads
-    viewer.addEventListener('load', function applyTransformsOnLoad() {
-      applyModelTransform();
-      viewer.removeEventListener('load', applyTransformsOnLoad);
-    });
   });
 
   // Camera Controls
@@ -40,36 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // Auto Rotate Delay (declare first so it can be used in autoRotate handler)
-  const autoRotateDelay = document.getElementById('auto-rotate-delay');
-  const autoRotateDelayValue = document.getElementById('auto-rotate-delay-value');
-
-  // Auto Rotate
-  const autoRotate = document.getElementById('auto-rotate');
-  autoRotate.addEventListener('change', function() {
-    if (this.checked) {
-      viewer.setAttribute('auto-rotate', '');
-      // Ensure delay is set when enabling auto-rotate
-      const delayValue = autoRotateDelay.value;
-      viewer.setAttribute('auto-rotate-delay', delayValue);
-    } else {
-      viewer.removeAttribute('auto-rotate');
-    }
-  });
-
-  // Auto Rotate Delay input handler
-  autoRotateDelay.addEventListener('input', function() {
-    const value = this.value;
-    autoRotateDelayValue.textContent = value;
-    // Set delay as number (milliseconds), not string with 'ms'
-    viewer.setAttribute('auto-rotate-delay', value);
-    // If auto-rotate is enabled, update it to apply the new delay
-    if (autoRotate.checked) {
-      viewer.removeAttribute('auto-rotate');
-      viewer.setAttribute('auto-rotate', '');
-    }
-  });
-
   // Camera Target Distance
   const cameraOrbit = document.getElementById('camera-orbit');
   const cameraOrbitValue = document.getElementById('camera-orbit-value');
@@ -79,26 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set the actual camera distance using camera-orbit attribute
     // Format: "theta phi radius" where radius is the distance in meters
     viewer.setAttribute('camera-orbit', `auto auto ${value}m`);
-  });
-
-  // AR Enabled
-  const arEnabled = document.getElementById('ar-enabled');
-  arEnabled.addEventListener('change', function() {
-    if (this.checked) {
-      viewer.setAttribute('ar', '');
-    } else {
-      viewer.removeAttribute('ar');
-    }
-  });
-
-  // AR Scale
-  const arScale = document.getElementById('ar-scale');
-  arScale.addEventListener('change', function() {
-    if (this.value === 'auto') {
-      viewer.removeAttribute('ar-scale');
-    } else {
-      viewer.setAttribute('ar-scale', this.value);
-    }
   });
 
   // Exposure
@@ -119,180 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
     viewer.setAttribute('shadow-intensity', value);
   });
 
-  // Scale
-  const scale = document.getElementById('scale');
-  const scaleValue = document.getElementById('scale-value');
-  
-  // Rotation X
-  const rotationX = document.getElementById('rotation-x');
-  const rotationXValue = document.getElementById('rotation-x-value');
-  
-  // Rotation Y
-  const rotationY = document.getElementById('rotation-y');
-  const rotationYValue = document.getElementById('rotation-y-value');
-  
-  // Rotation Z
-  const rotationZ = document.getElementById('rotation-z');
-  const rotationZValue = document.getElementById('rotation-z-value');
-
-  // Helper function to apply transforms to the model
-  function applyModelTransform() {
-    // Wait for model-viewer to be ready
-    if (!viewer.loaded) return;
-    
-    const scaleVal = parseFloat(scale.value);
-    const rotationXVal = parseFloat(rotationX.value) * (Math.PI / 180); // Convert to radians
-    const rotationYVal = parseFloat(rotationY.value) * (Math.PI / 180);
-    const rotationZVal = parseFloat(rotationZ.value) * (Math.PI / 180);
-    
-    // Access the Three.js scene through model-viewer's API
-    // Try multiple ways to access the scene/model
-    let scene = null;
-    if (viewer.scene) {
-      scene = viewer.scene;
-    } else if (viewer.renderer && viewer.renderer.scene) {
-      scene = viewer.renderer.scene;
-    } else if (viewer.model) {
-      scene = viewer.model;
-    }
-    
-    if (!scene) {
-      console.warn('Scene not accessible');
-      return;
-    }
-    
-    // Find the model in the scene - traverse to find the actual model mesh/group
-    let model = null;
-    
-    // Function to traverse and find the main model (skip helpers, lights, cameras)
-    function findModel(object) {
-      if (!object) return null;
-      
-      // Skip cameras, lights, and helpers
-      if (object.type === 'PerspectiveCamera' || 
-          object.type === 'DirectionalLight' || 
-          object.type === 'AmbientLight' ||
-          object.type === 'HemisphereLight' ||
-          (object.name && (object.name.toLowerCase().includes('helper') || 
-                          object.name.toLowerCase().includes('light') ||
-                          object.name.toLowerCase().includes('camera')))) {
-        return null;
-      }
-      
-      // If it's a mesh or group, it might be our model
-      if (object.type === 'Group' || object.type === 'Mesh' || object.type === 'SkinnedMesh') {
-        return object;
-      }
-      
-      // Traverse children
-      if (object.children && object.children.length > 0) {
-        for (let child of object.children) {
-          const found = findModel(child);
-          if (found) return found;
-        }
-      }
-      
-      return null;
-    }
-    
-    // Try to find the model starting from the scene
-    model = findModel(scene);
-    
-    // If not found, try a simpler approach - get the first meaningful child
-    if (!model && scene.children && scene.children.length > 0) {
-      for (let child of scene.children) {
-        if (child.type === 'Group' || child.type === 'Mesh' || child.type === 'SkinnedMesh') {
-          if (!child.name || (!child.name.toLowerCase().includes('helper') && 
-                              !child.name.toLowerCase().includes('light') &&
-                              !child.name.toLowerCase().includes('camera'))) {
-            model = child;
-            break;
-          }
-        }
-      }
-    }
-    
-    if (!model) {
-      console.warn('Model not found for transform');
-      return;
-    }
-    
-    // Apply scale
-    if (model.scale) {
-      model.scale.set(scaleVal, scaleVal, scaleVal);
-    }
-    
-    // Apply rotation (order: X, Y, Z)
-    if (model.rotation) {
-      model.rotation.set(rotationXVal, rotationYVal, rotationZVal);
-    }
-  }
-
-  // Wait for model to load before applying transforms
-  function setupModelTransforms() {
-    function tryApplyTransform() {
-      // Use setTimeout to ensure renderer is ready
-      setTimeout(() => {
-        applyModelTransform();
-      }, 100);
-    }
-    
-    if (viewer.loaded) {
-      tryApplyTransform();
-    } else {
-      viewer.addEventListener('load', function() {
-        tryApplyTransform();
-      });
-    }
-  }
-
-  // Scale input handler
-  scale.addEventListener('input', function() {
-    const value = parseFloat(this.value);
-    scaleValue.textContent = value.toFixed(1);
-    // Use requestAnimationFrame to ensure smooth updates
-    requestAnimationFrame(() => {
-      applyModelTransform();
-    });
-  });
-
-  // Rotation X input handler
-  rotationX.addEventListener('input', function() {
-    const value = this.value;
-    rotationXValue.textContent = value + '°';
-    requestAnimationFrame(() => {
-      applyModelTransform();
-    });
-  });
-
-  // Rotation Y input handler
-  rotationY.addEventListener('input', function() {
-    const value = this.value;
-    rotationYValue.textContent = value + '°';
-    requestAnimationFrame(() => {
-      applyModelTransform();
-    });
-  });
-
-  // Rotation Z input handler
-  rotationZ.addEventListener('input', function() {
-    const value = this.value;
-    rotationZValue.textContent = value + '°';
-    requestAnimationFrame(() => {
-      applyModelTransform();
-    });
-  });
-
-  // Setup transforms when model loads
-  setupModelTransforms();
-  
-  // Re-apply transforms when model changes
-  viewer.addEventListener('load', function() {
-    setTimeout(() => {
-      applyModelTransform();
-    }, 100);
-  });
-
   // Background Color
   const backgroundColor = document.getElementById('background-color');
   const backgroundColorText = document.getElementById('background-color-text');
@@ -303,7 +67,12 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   backgroundColorText.addEventListener('input', function() {
-    if (/^#[0-9A-F]{6}$/i.test(this.value)) {
+    // Validate hex color format using regular expression
+    // /^#[0-9A-F]{6}$/i means: starts with #, followed by exactly 6 hex digits (0-9, A-F)
+    // The 'i' makes it case-insensitive (accepts both uppercase and lowercase)
+    const isValidHexColor = /^#[0-9A-F]{6}$/i.test(this.value);
+    
+    if (isValidHexColor) {
       backgroundColor.value = this.value;
       updateBackground();
     }
@@ -329,34 +98,10 @@ document.addEventListener('DOMContentLoaded', function() {
       viewer.removeAttribute('camera-controls');
     }
 
-    // Reset auto rotate
-    autoRotate.checked = initialValues.autoRotate;
-    if (initialValues.autoRotate) {
-      viewer.setAttribute('auto-rotate', '');
-    } else {
-      viewer.removeAttribute('auto-rotate');
-    }
-
-    // Reset auto rotate delay
-    autoRotateDelay.value = initialValues.autoRotateDelay;
-    autoRotateDelayValue.textContent = initialValues.autoRotateDelay;
-    viewer.setAttribute('auto-rotate-delay', initialValues.autoRotateDelay);
-
     // Reset camera orbit
     cameraOrbit.value = '1';
     cameraOrbitValue.textContent = '1.0';
     viewer.setAttribute('camera-orbit', 'auto auto 1m');
-
-    // Reset AR
-    arEnabled.checked = initialValues.ar;
-    if (initialValues.ar) {
-      viewer.setAttribute('ar', '');
-    } else {
-      viewer.removeAttribute('ar');
-    }
-
-    arScale.value = 'auto';
-    viewer.removeAttribute('ar-scale');
 
     // Reset exposure
     exposure.value = initialValues.exposure;
@@ -368,23 +113,6 @@ document.addEventListener('DOMContentLoaded', function() {
     shadowIntensityValue.textContent = initialValues.shadowIntensity;
     viewer.setAttribute('shadow-intensity', initialValues.shadowIntensity);
 
-    // Reset scale
-    scale.value = initialValues.scale;
-    scaleValue.textContent = initialValues.scale;
-
-    // Reset rotation
-    rotationX.value = initialValues.rotationX;
-    rotationXValue.textContent = initialValues.rotationX + '°';
-    rotationY.value = initialValues.rotationY;
-    rotationYValue.textContent = initialValues.rotationY + '°';
-    rotationZ.value = initialValues.rotationZ;
-    rotationZValue.textContent = initialValues.rotationZ + '°';
-    
-    // Apply the reset transforms after a delay to ensure model is ready
-    setTimeout(() => {
-      applyModelTransform();
-    }, 200);
-
     // Reset background
     backgroundColor.value = initialValues.backgroundColor;
     backgroundColorText.value = initialValues.backgroundColor;
@@ -392,11 +120,9 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Initialize range value displays
-  autoRotateDelayValue.textContent = autoRotateDelay.value;
   cameraOrbitValue.textContent = cameraOrbit.value;
   exposureValue.textContent = exposure.value;
   shadowIntensityValue.textContent = shadowIntensity.value;
-  scaleValue.textContent = scale.value;
 });
 
 // Cake Sequence Scroll Animation
@@ -414,64 +140,115 @@ document.addEventListener('DOMContentLoaded', function() {
   const basePath = 'assets/cake/cake_';
   let isManualControl = false; // Track if user is manually controlling via slider
   
-  // Function to update the frame display and image based on frame number
+  // ============================================
+  // Helper Functions for Frame Animation
+  // ============================================
+  
+  // Convert frame number to a string with leading zeros
+  // Example: frame 5 becomes "00005", frame 12 becomes "00012"
+  // This matches the image file naming: cake_00000.png, cake_00001.png, etc.
+  function formatFrameNumber(frameNumber) {
+    // padStart(5, '0') adds zeros to the front until the string is 5 characters long
+    // Example: "5" becomes "00005", "12" becomes "00012"
+    return String(frameNumber).padStart(5, '0');
+  }
+  
+  // Update all visual elements to show a specific frame
   function setFrame(frameNumber) {
-    // Clamp frame number between 0 and totalFrames
-    frameNumber = Math.max(0, Math.min(totalFrames, Math.round(frameNumber)));
+    // Make sure frame number is a whole number between 0 and totalFrames
+    frameNumber = Math.round(frameNumber); // Round to nearest whole number
+    frameNumber = Math.max(0, Math.min(totalFrames, frameNumber)); // Keep between 0 and 25
     
-    // Update image source
-    const frameString = String(frameNumber).padStart(5, '0');
+    // Update the image source to show the correct frame
+    // Format: "assets/cake/cake_00000.png", "assets/cake/cake_00001.png", etc.
+    const frameString = formatFrameNumber(frameNumber);
     klingImage.src = `${basePath}${frameString}.png`;
     
-    // Calculate progress (0 to 1)
+    // Calculate progress as a decimal (0.0 to 1.0)
+    // Example: frame 12 out of 25 = 12/25 = 0.48 (48%)
     const progress = frameNumber / totalFrames;
     
-    // Update progress bar
+    // Update the progress bar width (convert 0-1 to 0-100%)
     if (progressBar) {
       progressBar.style.width = (progress * 100) + '%';
     }
     
-    // Update frame display
+    // Update the frame number display text
     if (frameDisplay) {
       frameDisplay.textContent = frameNumber;
     }
     
-    // Update slider if it exists
+    // Update the slider position to match the current frame
     if (sequenceSlider) {
       sequenceSlider.value = frameNumber;
     }
     
+    // Update the slider value display
     if (sequenceSliderValue) {
       sequenceSliderValue.textContent = frameNumber;
     }
   }
   
-  // Function to update the frame based on scroll progress
-  function updateFrameFromScroll() {
-    // Don't update from scroll if user is manually controlling
-    if (isManualControl) return;
-    
+  // ============================================
+  // Scroll-Based Animation
+  // ============================================
+  // This function calculates which frame to show based on scroll position
+  
+  // Calculate the scroll range where animation should happen
+  function getScrollRange() {
+    // Get the position and size of the animation section
     const rect = klingSection.getBoundingClientRect();
     const windowHeight = window.innerHeight || document.documentElement.clientHeight;
     
-    // Calculate when section enters viewport (top of section reaches top of viewport)
-    // and when it exits (bottom of section reaches top of viewport)
+    // Calculate where the section is on the page (including scrolled distance)
     const sectionTop = rect.top + window.scrollY;
     const sectionHeight = rect.height;
-    const scrollStart = sectionTop - windowHeight; // When section top reaches viewport top
-    const scrollEnd = sectionTop + sectionHeight; // When section bottom reaches viewport top
+    
+    // Animation starts when: section top reaches the top of the viewport
+    // This happens when user has scrolled enough that sectionTop equals window.scrollY + windowHeight
+    const scrollStart = sectionTop - windowHeight;
+    
+    // Animation ends when: section bottom reaches the top of the viewport
+    const scrollEnd = sectionTop + sectionHeight;
+    
+    // Total scroll distance over which animation happens
     const scrollRange = scrollEnd - scrollStart;
     
-    // Current scroll position
+    return {
+      scrollStart: scrollStart,
+      scrollEnd: scrollEnd,
+      scrollRange: scrollRange
+    };
+  }
+  
+  // Calculate which frame to show based on current scroll position
+  function calculateFrameFromScroll() {
+    const range = getScrollRange();
     const currentScroll = window.scrollY;
     
-    // Calculate progress (0 to 1) based on scroll position
-    let progress = (currentScroll - scrollStart) / scrollRange;
-    progress = Math.max(0, Math.min(1, progress)); // Clamp between 0 and 1
+    // Calculate how far through the animation we are (0.0 to 1.0)
+    // Example: if we're halfway through the scroll range, progress = 0.5
+    let progress = (currentScroll - range.scrollStart) / range.scrollRange;
     
-    // Map progress to frame number (0 to 25)
+    // Make sure progress stays between 0 and 1 (in case user scrolls too far)
+    progress = Math.max(0, Math.min(1, progress));
+    
+    // Convert progress (0-1) to frame number (0-25)
+    // Example: progress 0.5 with 25 frames = frame 12.5, rounded to 13
     const frameNumber = Math.round(progress * totalFrames);
     
+    return frameNumber;
+  }
+  
+  // Main function that updates the frame based on scroll
+  function updateFrameFromScroll() {
+    // Don't update from scroll if user is manually controlling the slider
+    if (isManualControl) return;
+    
+    // Calculate which frame to show
+    const frameNumber = calculateFrameFromScroll();
+    
+    // Update the display to show that frame
     setFrame(frameNumber);
   }
   

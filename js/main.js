@@ -42,164 +42,171 @@ document.addEventListener('DOMContentLoaded', function() {
   setupPopup('blackforest-cake-section', 'blackforest-popup');
   setupPopup('lantern-cake-section', 'lantern-popup');
 
-  // Scroll-controlled rotation for Circus Cake
+  // ============================================
+  // Scroll-Controlled Rotation for Circus Cake
+  // ============================================
+  // This section makes the cake rotate as you scroll the page
+  // The rotation is controlled by scroll position and limited to 0-360 degrees
+  
+  // Find the featured card section and the 3D model inside it
+  // The ?. is called "optional chaining" - it safely checks if circusSection exists
+  // before trying to find the model-viewer inside it
   const circusSection = document.querySelector('.featured-card');
   const circusModel = circusSection?.querySelector('model-viewer');
   
+  // Only set up rotation if both the section and model exist
   if (circusModel && circusSection) {
-    let lastScrollY = window.scrollY || window.pageYOffset;
-    let currentAzimuth = 0;
-    let isModelLoaded = false;
-    const baseElevation = 60;
-    const baseDistance = 105;
-    let scrollTimeout;
-    const hadCameraControls = circusModel.hasAttribute('camera-controls');
-    let lockedDirection = null; // 'down' or 'up' - direction that reached 100%
+    // Variables to track scroll and rotation state
+    let lastScrollY = window.scrollY || window.pageYOffset; // Last scroll position
+    let currentAzimuth = 0; // Current rotation angle (0-360 degrees)
+    let isModelLoaded = false; // Whether the 3D model has finished loading
     
-    // Get progress bar elements
+    // Camera settings - these control how the camera views the model
+    const baseElevation = 60; // How high/low the camera is (60 degrees up)
+    const baseDistance = 105; // How far the camera is from the model (105%)
+    
+    let scrollTimeout; // Used to delay re-enabling camera controls
+    
+    // Remember if the model had camera-controls originally
+    // We temporarily disable them during scroll rotation
+    const hadCameraControls = circusModel.hasAttribute('camera-controls');
+    
+    // Get the progress bar elements to show rotation percentage
     const progressBar = document.getElementById('rotation-progress');
     const progressPercentage = document.getElementById('rotation-percentage');
     
-    // Function to check if section is in viewport
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
+    // Check if the section is currently visible on screen
     function isSectionInView() {
-      const rect = circusSection.getBoundingClientRect();
+      const rect = circusSection.getBoundingClientRect(); // Get section position
       const windowHeight = window.innerHeight || document.documentElement.clientHeight;
-      // Check if section is at least partially visible
+      // Section is in view if its top is above the bottom of the window
+      // AND its bottom is below the top of the window
       return rect.top < windowHeight && rect.bottom > 0;
     }
     
-    // Function to update progress bar
+    // Update the progress bar to show current rotation percentage
     function updateProgressBar() {
       if (progressBar && progressPercentage) {
-        // Calculate percentage (0-360 degrees = 0-100%)
+        // Convert rotation angle (0-360 degrees) to percentage (0-100%)
         const percentage = (currentAzimuth / 360) * 100;
-        // Clamp percentage to 0-100
+        
+        // Make sure percentage stays between 0 and 100
         const clampedPercentage = Math.min(100, Math.max(0, percentage));
+        
+        // Update the visual progress bar width
         progressBar.style.width = clampedPercentage + '%';
+        // Update the text showing the percentage
         progressPercentage.textContent = Math.round(clampedPercentage) + '%';
       }
     }
     
-    // Function to update model rotation using camera-orbit
+    // Apply the rotation to the 3D model
+    function applyRotationToModel() {
+      // Create the camera-orbit string: "azimuth elevation distance"
+      // azimuth = horizontal rotation (0-360 degrees)
+      // elevation = vertical angle (stays at 60 degrees)
+      // distance = how far camera is (stays at 105%)
+      const orbitValue = `${currentAzimuth.toFixed(1)}deg ${baseElevation}deg ${baseDistance}%`;
+      circusModel.setAttribute('camera-orbit', orbitValue);
+    }
+    
+    // ============================================
+    // Main Rotation Function
+    // ============================================
+    // This function updates the rotation based on how much the user scrolled
     function updateRotation(scrollDelta) {
+      // Don't do anything if the model hasn't loaded yet
       if (!isModelLoaded) return;
       
-      // Check if we're at 100% (360 degrees)
-      const isAtMax = currentAzimuth >= 360;
-      const isAtMin = currentAzimuth <= 0;
-      
-      // Determine scroll direction
-      const isScrollingDown = scrollDelta > 0;
-      const isScrollingUp = scrollDelta < 0;
-      
-      // If at 100%, check if we should block rotation
-      if (isAtMax && lockedDirection) {
-        // If locked direction is 'down' (reached 100% by scrolling down), block scrolling down
-        if (lockedDirection === 'down' && isScrollingDown) {
-          return; // Block further rotation in the same direction
-        }
-        // If locked direction is 'up' (reached 100% by scrolling up), block scrolling up
-        if (lockedDirection === 'up' && isScrollingUp) {
-          return; // Block further rotation in the same direction
-        }
-        // If going in opposite direction, unlock immediately
-        if ((lockedDirection === 'down' && isScrollingUp) || 
-            (lockedDirection === 'up' && isScrollingDown)) {
-          lockedDirection = null; // Unlock when going opposite direction
-        }
-      }
-      
-      // If at 0%, prevent going below 0
-      if (isAtMin && isScrollingUp) {
-        return; // Block rotation below 0
-      }
-      
-      // Temporarily disable camera-controls to prevent interference
+      // Temporarily disable camera-controls so our scroll rotation works smoothly
+      // Camera-controls would interfere with our programmatic rotation
       if (hadCameraControls) {
         circusModel.removeAttribute('camera-controls');
       }
       
-      // Rotation speed - adjust this to make rotation faster/slower
-      // Scrolling down (positive delta) = rotate right (positive azimuth)
-      // Scrolling up (negative delta) = rotate left (negative azimuth)
+      // Calculate how much to rotate based on scroll
+      // scrollDelta: positive = scrolling down, negative = scrolling up
+      // rotationSpeed: how fast the model rotates (2.0 means 2 degrees per pixel scrolled)
       const rotationSpeed = 2.0;
       currentAzimuth += scrollDelta * rotationSpeed;
       
-      // Clamp azimuth to 0-360 range
+      // Keep rotation between 0 and 360 degrees
+      // If user scrolls past the limits, stop at 0 or 360
       if (currentAzimuth < 0) {
-        currentAzimuth = 0;
-      } else if (currentAzimuth >= 360) {
-        currentAzimuth = 360;
-        // Lock direction when reaching 100% for the first time
-        if (!lockedDirection) {
-          lockedDirection = isScrollingDown ? 'down' : 'up';
-        }
-      } else {
-        // If we're going back from 100%, unlock
-        if (lockedDirection && currentAzimuth < 360) {
-          lockedDirection = null;
-        }
+        currentAzimuth = 0; // Can't go below 0 degrees
+      } else if (currentAzimuth > 360) {
+        currentAzimuth = 360; // Can't go above 360 degrees (full rotation)
       }
       
-      // Use camera-orbit to rotate the camera around the model
-      // Format: "azimuth elevation distance"
-      const orbitValue = `${currentAzimuth.toFixed(1)}deg ${baseElevation}deg ${baseDistance}%`;
-      circusModel.setAttribute('camera-orbit', orbitValue);
+      // Apply the rotation to the model
+      applyRotationToModel();
       
-      // Update progress bar
+      // Update the progress bar
       updateProgressBar();
       
-      // Re-enable camera-controls after scrolling stops
+      // Re-enable camera-controls after user stops scrolling
+      // This allows manual camera control when not scrolling
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(function() {
         if (hadCameraControls) {
           circusModel.setAttribute('camera-controls', '');
         }
-      }, 200);
+      }, 200); // Wait 200ms after scrolling stops
     }
     
-    // Handle scroll events
+    // ============================================
+    // Scroll Event Handler
+    // ============================================
+    // This runs every time the user scrolls the page
     window.addEventListener('scroll', function() {
+      // Only rotate if the section is visible and model is loaded
       const inView = isSectionInView();
-      
-      // Only rotate when section is in view
       if (!inView || !isModelLoaded) {
+        // Update last scroll position even if we're not rotating
         lastScrollY = window.scrollY || window.pageYOffset;
-        return;
+        return; // Exit early - don't rotate
       }
       
-      // Calculate scroll direction and amount
+      // Calculate how much the user scrolled since last time
       const currentScrollY = window.scrollY || window.pageYOffset;
       const scrollDelta = currentScrollY - lastScrollY;
       
-      // Update rotation based on scroll
+      // Only update rotation if there was actual scrolling
       if (Math.abs(scrollDelta) > 0) {
         updateRotation(scrollDelta);
       }
       
+      // Remember this scroll position for next time
       lastScrollY = currentScrollY;
-    }, { passive: true });
+    }, { passive: true }); // passive: true makes scrolling smoother
     
-    // Wait for model to load
+    // ============================================
+    // Initialize Rotation System
+    // ============================================
+    // Set up the rotation system once the model has loaded
     function initializeRotation() {
-      isModelLoaded = true;
-      currentAzimuth = 0;
-      lockedDirection = null; // Reset lock on initialization
+      isModelLoaded = true; // Mark model as loaded
+      currentAzimuth = 0; // Start at 0 degrees (no rotation)
       
-      // Set initial camera-orbit
+      // Set the initial camera position
       circusModel.setAttribute('camera-orbit', `0deg ${baseElevation}deg ${baseDistance}%`);
       
-      // Initialize progress bar
+      // Show initial progress (0%)
       updateProgressBar();
     }
     
-    // Check if model is already loaded
+    // Check if model is already loaded (might load before this script runs)
     if (circusModel.loaded) {
       initializeRotation();
     } else {
-      // Wait for model to load
+      // Wait for the model to finish loading
       circusModel.addEventListener('load', initializeRotation);
-      // Also try after a short delay in case load event doesn't fire
+      
+      // Backup: if the load event doesn't fire, try again after 1 second
       setTimeout(function() {
         if (!isModelLoaded && circusModel.loaded) {
           initializeRotation();
