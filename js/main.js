@@ -48,8 +48,16 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (circusModel && circusSection) {
     let lastScrollY = window.scrollY || window.pageYOffset;
-    let currentRotation = 0;
+    let currentAzimuth = 0;
     let isModelLoaded = false;
+    const baseElevation = 60;
+    const baseDistance = 105;
+    let scrollTimeout;
+    const hadCameraControls = circusModel.hasAttribute('camera-controls');
+    
+    // Get progress bar elements
+    const progressBar = document.getElementById('rotation-progress');
+    const progressPercentage = document.getElementById('rotation-percentage');
     
     // Function to check if section is in viewport
     function isSectionInView() {
@@ -59,45 +67,57 @@ document.addEventListener('DOMContentLoaded', function() {
       return rect.top < windowHeight && rect.bottom > 0;
     }
     
-    // Get progress bar elements
-    const progressBar = document.getElementById('rotation-progress');
-    const progressPercentage = document.getElementById('rotation-percentage');
-    
     // Function to update progress bar
     function updateProgressBar() {
-      if (!progressBar || !progressPercentage) return;
-      
-      // Calculate percentage (0-360 degrees = 0-100%)
-      const percentage = (currentRotation / 360) * 100;
-      progressBar.style.width = percentage + '%';
-      progressPercentage.textContent = Math.round(percentage) + '%';
+      if (progressBar && progressPercentage) {
+        // Calculate percentage (0-360 degrees = 0-100%)
+        const percentage = (currentAzimuth / 360) * 100;
+        progressBar.style.width = percentage + '%';
+        progressPercentage.textContent = Math.round(percentage) + '%';
+      }
     }
     
-    // Function to update model rotation
+    // Function to update model rotation using camera-orbit
     function updateRotation(scrollDelta) {
       if (!isModelLoaded) return;
       
+      // Temporarily disable camera-controls to prevent interference
+      if (hadCameraControls) {
+        circusModel.removeAttribute('camera-controls');
+      }
+      
       // Rotation speed - adjust this to make rotation faster/slower
-      // Scrolling down (positive delta) = rotate right
-      // Scrolling up (negative delta) = rotate left
-      const rotationSpeed = 4.0;
-      currentRotation += scrollDelta * rotationSpeed;
+      // Scrolling down (positive delta) = rotate right (positive azimuth)
+      // Scrolling up (negative delta) = rotate left (negative azimuth)
+      const rotationSpeed = 2.0;
+      currentAzimuth += scrollDelta * rotationSpeed;
       
-      // Keep rotation within 0-360 range
-      currentRotation = ((currentRotation % 360) + 360) % 360;
+      // Keep azimuth within 0-360 range
+      currentAzimuth = ((currentAzimuth % 360) + 360) % 360;
       
-      // Use rotation attribute to rotate the model itself
-      // Format: "X Y Z" in degrees, rotating around Y-axis (vertical)
-      circusModel.setAttribute('rotation', `0 ${currentRotation.toFixed(1)} 0`);
+      // Use camera-orbit to rotate the camera around the model
+      // Format: "azimuth elevation distance"
+      const orbitValue = `${currentAzimuth.toFixed(1)}deg ${baseElevation}deg ${baseDistance}%`;
+      circusModel.setAttribute('camera-orbit', orbitValue);
       
       // Update progress bar
       updateProgressBar();
+      
+      // Re-enable camera-controls after scrolling stops
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(function() {
+        if (hadCameraControls) {
+          circusModel.setAttribute('camera-controls', '');
+        }
+      }, 200);
     }
     
     // Handle scroll events
     window.addEventListener('scroll', function() {
+      const inView = isSectionInView();
+      
       // Only rotate when section is in view
-      if (!isSectionInView() || !isModelLoaded) {
+      if (!inView || !isModelLoaded) {
         lastScrollY = window.scrollY || window.pageYOffset;
         return;
       }
@@ -117,9 +137,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Wait for model to load
     function initializeRotation() {
       isModelLoaded = true;
-      currentRotation = 0;
-      // Initialize rotation to 0
-      circusModel.setAttribute('rotation', '0 0 0');
+      currentAzimuth = 0;
+      
+      // Set initial camera-orbit
+      circusModel.setAttribute('camera-orbit', `0deg ${baseElevation}deg ${baseDistance}%`);
+      
       // Initialize progress bar
       updateProgressBar();
     }
