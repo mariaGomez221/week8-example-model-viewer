@@ -47,9 +47,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const circusModel = circusSection?.querySelector('model-viewer');
   
   if (circusModel && circusSection) {
-    let lastScrollY = window.scrollY;
-    let currentRotationY = 0;
-    let scrollTimeout;
+    let lastScrollY = window.scrollY || window.pageYOffset;
+    let currentRotation = 0;
+    let isModelLoaded = false;
     
     // Function to check if section is in viewport
     function isSectionInView() {
@@ -61,52 +61,63 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to update model rotation
     function updateRotation(scrollDelta) {
-      if (!isSectionInView()) return;
+      if (!isModelLoaded) return;
       
-      // Rotation speed (adjust this value to make rotation faster/slower)
-      // Positive scrollDelta (scrolling down) = rotate right (positive Y rotation)
-      // Negative scrollDelta (scrolling up) = rotate left (negative Y rotation)
-      const rotationSpeed = 0.3;
-      currentRotationY += scrollDelta * rotationSpeed;
+      // Rotation speed - adjust this to make rotation faster/slower
+      // Scrolling down (positive delta) = rotate right
+      // Scrolling up (negative delta) = rotate left
+      const rotationSpeed = 2.0;
+      currentRotation += scrollDelta * rotationSpeed;
       
-      // Keep rotation within 0-360 range for cleaner values
-      currentRotationY = currentRotationY % 360;
-      if (currentRotationY < 0) currentRotationY += 360;
+      // Keep rotation within 0-360 range
+      currentRotation = ((currentRotation % 360) + 360) % 360;
       
-      // Apply rotation to the model (rotation format: "X Y Z" in degrees)
-      // Rotating around Y-axis (vertical) for horizontal spinning
-      circusModel.setAttribute('rotation', `0 ${currentRotationY} 0`);
+      // Use rotation attribute to rotate the model itself
+      // Format: "X Y Z" in degrees, rotating around Y-axis (vertical)
+      circusModel.setAttribute('rotation', `0 ${currentRotation.toFixed(1)} 0`);
     }
     
     // Handle scroll events
     window.addEventListener('scroll', function() {
-      if (!isSectionInView()) return;
-      
-      clearTimeout(scrollTimeout);
+      // Only rotate when section is in view
+      if (!isSectionInView() || !isModelLoaded) {
+        lastScrollY = window.scrollY || window.pageYOffset;
+        return;
+      }
       
       // Calculate scroll direction and amount
-      const currentScrollY = window.scrollY;
+      const currentScrollY = window.scrollY || window.pageYOffset;
       const scrollDelta = currentScrollY - lastScrollY;
       
-      // Only update rotation if there's actual scroll movement
+      // Update rotation based on scroll
       if (Math.abs(scrollDelta) > 0) {
         updateRotation(scrollDelta);
       }
       
       lastScrollY = currentScrollY;
-      
-      // Clear timeout after scrolling stops
-      scrollTimeout = setTimeout(function() {
-        // Optional: could add any cleanup here if needed
-      }, 150);
-    });
+    }, { passive: true });
     
-    // Wait for model to load before applying rotation
-    circusModel.addEventListener('load', function() {
+    // Wait for model to load
+    function initializeRotation() {
+      isModelLoaded = true;
+      currentRotation = 0;
       // Initialize rotation to 0
-      currentRotationY = 0;
       circusModel.setAttribute('rotation', '0 0 0');
-    });
+    }
+    
+    // Check if model is already loaded
+    if (circusModel.loaded) {
+      initializeRotation();
+    } else {
+      // Wait for model to load
+      circusModel.addEventListener('load', initializeRotation);
+      // Also try after a short delay in case load event doesn't fire
+      setTimeout(function() {
+        if (!isModelLoaded && circusModel.loaded) {
+          initializeRotation();
+        }
+      }, 1000);
+    }
   }
 });
 
