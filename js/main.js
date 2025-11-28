@@ -59,6 +59,20 @@ document.addEventListener('DOMContentLoaded', function() {
       return rect.top < windowHeight && rect.bottom > 0;
     }
     
+    // Get progress bar elements
+    const progressBar = document.getElementById('rotation-progress');
+    const progressPercentage = document.getElementById('rotation-percentage');
+    
+    // Function to update progress bar
+    function updateProgressBar() {
+      if (!progressBar || !progressPercentage) return;
+      
+      // Calculate percentage (0-360 degrees = 0-100%)
+      const percentage = (currentRotation / 360) * 100;
+      progressBar.style.width = percentage + '%';
+      progressPercentage.textContent = Math.round(percentage) + '%';
+    }
+    
     // Function to update model rotation
     function updateRotation(scrollDelta) {
       if (!isModelLoaded) return;
@@ -66,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
       // Rotation speed - adjust this to make rotation faster/slower
       // Scrolling down (positive delta) = rotate right
       // Scrolling up (negative delta) = rotate left
-      const rotationSpeed = 2.0;
+      const rotationSpeed = 4.0;
       currentRotation += scrollDelta * rotationSpeed;
       
       // Keep rotation within 0-360 range
@@ -75,6 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Use rotation attribute to rotate the model itself
       // Format: "X Y Z" in degrees, rotating around Y-axis (vertical)
       circusModel.setAttribute('rotation', `0 ${currentRotation.toFixed(1)} 0`);
+      
+      // Update progress bar
+      updateProgressBar();
     }
     
     // Handle scroll events
@@ -103,6 +120,8 @@ document.addEventListener('DOMContentLoaded', function() {
       currentRotation = 0;
       // Initialize rotation to 0
       circusModel.setAttribute('rotation', '0 0 0');
+      // Initialize progress bar
+      updateProgressBar();
     }
     
     // Check if model is already loaded
