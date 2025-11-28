@@ -512,6 +512,209 @@ model-viewer {
   }
 }
 
+/* Kling Sequence Card Section */
+.kling-sequence-card {
+  padding: 4rem 0;
+  margin: 2rem 0;
+}
+
+.kling-sequence-container {
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f8f8f8 0%, #ffffff 100%);
+  position: relative;
+}
+
+.kling-sequence-container img {
+  width: 100%;
+  flex: 1;
+  object-fit: contain;
+  min-height: 600px;
+  background: transparent;
+}
+
+/* Sequence Progress Bar */
+.sequence-progress-container {
+  padding: 1.5rem 2rem;
+  background: var(--bg-white);
+  border-top: 1px solid #e0e0e0;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sequence-progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.sequence-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  border-radius: 4px;
+  width: 0%;
+  transition: width 0.1s ease-out;
+  display: block;
+  min-width: 0;
+}
+
+.sequence-progress-label {
+  display: block;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.sequence-progress-label span {
+  color: var(--secondary-color);
+  font-weight: 600;
+}
+
+/* Manual Control Slider */
+.sequence-manual-control {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.sequence-manual-control label {
+  display: block;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.sequence-slider-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sequence-slider-wrapper input[type="range"] {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.sequence-slider-wrapper input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sequence-slider-wrapper input[type="range"]::-webkit-slider-thumb:hover {
+  background: var(--secondary-color);
+  transform: scale(1.1);
+}
+
+.sequence-slider-wrapper input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--primary-color);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sequence-slider-wrapper input[type="range"]::-moz-range-thumb:hover {
+  background: var(--secondary-color);
+  transform: scale(1.1);
+}
+
+.sequence-slider-value {
+  min-width: 30px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--secondary-color);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .kling-sequence-card {
+    padding: 2rem 0;
+    margin: 1.5rem 0;
+  }
+
+  .kling-sequence-container {
+    min-height: 500px;
+  }
+
+  .kling-sequence-container img {
+    min-height: 500px;
+  }
+
+  .sequence-progress-container {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .sequence-progress-label {
+    font-size: 0.85rem;
+  }
+
+  .sequence-manual-control {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  .sequence-manual-control label {
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kling-sequence-container {
+    min-height: 400px;
+  }
+
+  .kling-sequence-container img {
+    min-height: 400px;
+  }
+
+  .sequence-progress-container {
+    padding: 1rem 1.25rem;
+  }
+
+  .sequence-progress-label {
+    font-size: 0.8rem;
+  }
+
+  .sequence-manual-control {
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  .sequence-manual-control label {
+    font-size: 0.8rem;
+  }
+
+  .sequence-slider-value {
+    font-size: 0.85rem;
+  }
+}
+
 /* Contact Section */
 #contact {
   padding: 4rem 0;

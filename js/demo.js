@@ -284,3 +284,110 @@ document.addEventListener('DOMContentLoaded', function() {
   scaleValue.textContent = scale.value;
 });
 
+// Cake Sequence Scroll Animation
+document.addEventListener('DOMContentLoaded', function() {
+  const klingSection = document.querySelector('.kling-sequence-card');
+  const klingImage = document.getElementById('kling-sequence-image');
+  const progressBar = document.getElementById('sequence-progress');
+  const frameDisplay = document.getElementById('sequence-frame');
+  const sequenceSlider = document.getElementById('sequence-slider');
+  const sequenceSliderValue = document.getElementById('sequence-slider-value');
+  
+  if (!klingSection || !klingImage) return;
+  
+  const totalFrames = 25; // Frames 0-25
+  const basePath = 'assets/cake/cake_';
+  let isManualControl = false; // Track if user is manually controlling via slider
+  
+  // Function to update the frame display and image based on frame number
+  function setFrame(frameNumber) {
+    // Clamp frame number between 0 and totalFrames
+    frameNumber = Math.max(0, Math.min(totalFrames, Math.round(frameNumber)));
+    
+    // Update image source
+    const frameString = String(frameNumber).padStart(5, '0');
+    klingImage.src = `${basePath}${frameString}.png`;
+    
+    // Calculate progress (0 to 1)
+    const progress = frameNumber / totalFrames;
+    
+    // Update progress bar
+    if (progressBar) {
+      progressBar.style.width = (progress * 100) + '%';
+    }
+    
+    // Update frame display
+    if (frameDisplay) {
+      frameDisplay.textContent = frameNumber;
+    }
+    
+    // Update slider if it exists
+    if (sequenceSlider) {
+      sequenceSlider.value = frameNumber;
+    }
+    
+    if (sequenceSliderValue) {
+      sequenceSliderValue.textContent = frameNumber;
+    }
+  }
+  
+  // Function to update the frame based on scroll progress
+  function updateFrameFromScroll() {
+    // Don't update from scroll if user is manually controlling
+    if (isManualControl) return;
+    
+    const rect = klingSection.getBoundingClientRect();
+    const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+    
+    // Calculate when section enters viewport (top of section reaches top of viewport)
+    // and when it exits (bottom of section reaches top of viewport)
+    const sectionTop = rect.top + window.scrollY;
+    const sectionHeight = rect.height;
+    const scrollStart = sectionTop - windowHeight; // When section top reaches viewport top
+    const scrollEnd = sectionTop + sectionHeight; // When section bottom reaches viewport top
+    const scrollRange = scrollEnd - scrollStart;
+    
+    // Current scroll position
+    const currentScroll = window.scrollY;
+    
+    // Calculate progress (0 to 1) based on scroll position
+    let progress = (currentScroll - scrollStart) / scrollRange;
+    progress = Math.max(0, Math.min(1, progress)); // Clamp between 0 and 1
+    
+    // Map progress to frame number (0 to 25)
+    const frameNumber = Math.round(progress * totalFrames);
+    
+    setFrame(frameNumber);
+  }
+  
+  // Manual slider control
+  if (sequenceSlider) {
+    sequenceSlider.addEventListener('input', function() {
+      isManualControl = true;
+      const frameNumber = parseInt(this.value);
+      setFrame(frameNumber);
+    });
+    
+    // Reset manual control flag when user releases slider
+    sequenceSlider.addEventListener('mouseup', function() {
+      // Allow scroll to take over after a short delay
+      setTimeout(function() {
+        isManualControl = false;
+      }, 100);
+    });
+    
+    sequenceSlider.addEventListener('touchend', function() {
+      // Allow scroll to take over after a short delay (for touch devices)
+      setTimeout(function() {
+        isManualControl = false;
+      }, 100);
+    });
+  }
+  
+  // Update on scroll
+  window.addEventListener('scroll', updateFrameFromScroll, { passive: true });
+  
+  // Initial update
+  updateFrameFromScroll();
+});
+
