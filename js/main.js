@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const baseDistance = 105;
     let scrollTimeout;
     const hadCameraControls = circusModel.hasAttribute('camera-controls');
+    let lockedDirection = null; // 'down' or 'up' - direction that reached 100%
     
     // Get progress bar elements
     const progressBar = document.getElementById('rotation-progress');
@@ -72,14 +73,46 @@ document.addEventListener('DOMContentLoaded', function() {
       if (progressBar && progressPercentage) {
         // Calculate percentage (0-360 degrees = 0-100%)
         const percentage = (currentAzimuth / 360) * 100;
-        progressBar.style.width = percentage + '%';
-        progressPercentage.textContent = Math.round(percentage) + '%';
+        // Clamp percentage to 0-100
+        const clampedPercentage = Math.min(100, Math.max(0, percentage));
+        progressBar.style.width = clampedPercentage + '%';
+        progressPercentage.textContent = Math.round(clampedPercentage) + '%';
       }
     }
     
     // Function to update model rotation using camera-orbit
     function updateRotation(scrollDelta) {
       if (!isModelLoaded) return;
+      
+      // Check if we're at 100% (360 degrees)
+      const isAtMax = currentAzimuth >= 360;
+      const isAtMin = currentAzimuth <= 0;
+      
+      // Determine scroll direction
+      const isScrollingDown = scrollDelta > 0;
+      const isScrollingUp = scrollDelta < 0;
+      
+      // If at 100%, check if we should block rotation
+      if (isAtMax && lockedDirection) {
+        // If locked direction is 'down' (reached 100% by scrolling down), block scrolling down
+        if (lockedDirection === 'down' && isScrollingDown) {
+          return; // Block further rotation in the same direction
+        }
+        // If locked direction is 'up' (reached 100% by scrolling up), block scrolling up
+        if (lockedDirection === 'up' && isScrollingUp) {
+          return; // Block further rotation in the same direction
+        }
+        // If going in opposite direction, unlock immediately
+        if ((lockedDirection === 'down' && isScrollingUp) || 
+            (lockedDirection === 'up' && isScrollingDown)) {
+          lockedDirection = null; // Unlock when going opposite direction
+        }
+      }
+      
+      // If at 0%, prevent going below 0
+      if (isAtMin && isScrollingUp) {
+        return; // Block rotation below 0
+      }
       
       // Temporarily disable camera-controls to prevent interference
       if (hadCameraControls) {
@@ -92,8 +125,21 @@ document.addEventListener('DOMContentLoaded', function() {
       const rotationSpeed = 2.0;
       currentAzimuth += scrollDelta * rotationSpeed;
       
-      // Keep azimuth within 0-360 range
-      currentAzimuth = ((currentAzimuth % 360) + 360) % 360;
+      // Clamp azimuth to 0-360 range
+      if (currentAzimuth < 0) {
+        currentAzimuth = 0;
+      } else if (currentAzimuth >= 360) {
+        currentAzimuth = 360;
+        // Lock direction when reaching 100% for the first time
+        if (!lockedDirection) {
+          lockedDirection = isScrollingDown ? 'down' : 'up';
+        }
+      } else {
+        // If we're going back from 100%, unlock
+        if (lockedDirection && currentAzimuth < 360) {
+          lockedDirection = null;
+        }
+      }
       
       // Use camera-orbit to rotate the camera around the model
       // Format: "azimuth elevation distance"
@@ -138,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeRotation() {
       isModelLoaded = true;
       currentAzimuth = 0;
+      lockedDirection = null; // Reset lock on initialization
       
       // Set initial camera-orbit
       circusModel.setAttribute('camera-orbit', `0deg ${baseElevation}deg ${baseDistance}%`);
