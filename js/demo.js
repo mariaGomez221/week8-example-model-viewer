@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const modelSelect = document.getElementById('model-select');
   modelSelect.addEventListener('change', function() {
     viewer.src = this.value;
+    // Reapply transforms when new model loads
+    viewer.addEventListener('load', function applyTransformsOnLoad() {
+      applyModelTransform();
+      viewer.removeEventListener('load', applyTransformsOnLoad);
+    });
   });
 
   // Camera Controls
@@ -37,23 +42,34 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  // Auto Rotate Delay (declare first so it can be used in autoRotate handler)
+  const autoRotateDelay = document.getElementById('auto-rotate-delay');
+  const autoRotateDelayValue = document.getElementById('auto-rotate-delay-value');
+
   // Auto Rotate
   const autoRotate = document.getElementById('auto-rotate');
   autoRotate.addEventListener('change', function() {
     if (this.checked) {
       viewer.setAttribute('auto-rotate', '');
+      // Ensure delay is set when enabling auto-rotate
+      const delayValue = autoRotateDelay.value;
+      viewer.setAttribute('auto-rotate-delay', delayValue);
     } else {
       viewer.removeAttribute('auto-rotate');
     }
   });
 
-  // Auto Rotate Delay
-  const autoRotateDelay = document.getElementById('auto-rotate-delay');
-  const autoRotateDelayValue = document.getElementById('auto-rotate-delay-value');
+  // Auto Rotate Delay input handler
   autoRotateDelay.addEventListener('input', function() {
     const value = this.value;
     autoRotateDelayValue.textContent = value;
-    viewer.setAttribute('auto-rotate-delay', value + 'ms');
+    // Set delay as number (milliseconds), not string with 'ms'
+    viewer.setAttribute('auto-rotate-delay', value);
+    // If auto-rotate is enabled, update it to apply the new delay
+    if (autoRotate.checked) {
+      viewer.removeAttribute('auto-rotate');
+      viewer.setAttribute('auto-rotate', '');
+    }
   });
 
   // Camera Target Distance
@@ -62,10 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
   cameraOrbit.addEventListener('input', function() {
     const value = parseFloat(this.value);
     cameraOrbitValue.textContent = value.toFixed(1);
-    // Adjust minimum camera distance (affects how close the camera can get)
-    const radius = Math.max(0.5, value * 1.5); // Convert to reasonable radius in meters
-    viewer.setAttribute('min-camera-orbit', `auto auto ${radius}m`);
-    viewer.setAttribute('max-camera-orbit', `auto auto ${radius * 3}m`);
+    // Set the actual camera distance using camera-orbit attribute
+    // Format: "theta phi radius" where radius is the distance in meters
+    viewer.setAttribute('camera-orbit', `auto auto ${value}m`);
   });
 
   // AR Enabled
@@ -119,47 +134,111 @@ document.addEventListener('DOMContentLoaded', function() {
   // Scale
   const scale = document.getElementById('scale');
   const scaleValue = document.getElementById('scale-value');
-  scale.addEventListener('input', function() {
-    const value = parseFloat(this.value);
-    scaleValue.textContent = value.toFixed(1);
-    viewer.setAttribute('scale', value);
-  });
-
+  
   // Rotation X
   const rotationX = document.getElementById('rotation-x');
   const rotationXValue = document.getElementById('rotation-x-value');
-  rotationX.addEventListener('input', function() {
-    const value = this.value;
-    rotationXValue.textContent = value + '°';
-    updateRotation();
-  });
-
+  
   // Rotation Y
   const rotationY = document.getElementById('rotation-y');
   const rotationYValue = document.getElementById('rotation-y-value');
-  rotationY.addEventListener('input', function() {
-    const value = this.value;
-    rotationYValue.textContent = value + '°';
-    updateRotation();
-  });
-
+  
   // Rotation Z
   const rotationZ = document.getElementById('rotation-z');
   const rotationZValue = document.getElementById('rotation-z-value');
+
+  // Helper function to apply transforms to the model
+  function applyModelTransform() {
+    // Wait for model-viewer to be ready
+    if (!viewer.loaded) return;
+    
+    // Access the Three.js scene
+    const scene = viewer.scene || viewer.model;
+    if (!scene) return;
+    
+    const scaleVal = parseFloat(scale.value);
+    const rotationXVal = parseFloat(rotationX.value) * (Math.PI / 180); // Convert to radians
+    const rotationYVal = parseFloat(rotationY.value) * (Math.PI / 180);
+    const rotationZVal = parseFloat(rotationZ.value) * (Math.PI / 180);
+    
+    // Find the model in the scene (usually the first child or we traverse)
+    let model = null;
+    if (scene.children && scene.children.length > 0) {
+      // Try to find the model mesh
+      for (let child of scene.children) {
+        if (child.type === 'Group' || child.type === 'Mesh') {
+          model = child;
+          break;
+        }
+      }
+      // If no specific model found, use the first child
+      if (!model && scene.children[0]) {
+        model = scene.children[0];
+      }
+    } else if (scene.scale) {
+      // If scene itself is the model
+      model = scene;
+    }
+    
+    if (!model) return;
+    
+    // Apply scale
+    if (model.scale) {
+      model.scale.set(scaleVal, scaleVal, scaleVal);
+    }
+    
+    // Apply rotation (order: X, Y, Z)
+    if (model.rotation) {
+      model.rotation.set(rotationXVal, rotationYVal, rotationZVal);
+    }
+  }
+
+  // Wait for model to load before applying transforms
+  function setupModelTransforms() {
+    if (viewer.loaded) {
+      applyModelTransform();
+    } else {
+      viewer.addEventListener('load', function() {
+        applyModelTransform();
+      });
+    }
+  }
+
+  // Scale input handler
+  scale.addEventListener('input', function() {
+    const value = parseFloat(this.value);
+    scaleValue.textContent = value.toFixed(1);
+    applyModelTransform();
+  });
+
+  // Rotation X input handler
+  rotationX.addEventListener('input', function() {
+    const value = this.value;
+    rotationXValue.textContent = value + '°';
+    applyModelTransform();
+  });
+
+  // Rotation Y input handler
+  rotationY.addEventListener('input', function() {
+    const value = this.value;
+    rotationYValue.textContent = value + '°';
+    applyModelTransform();
+  });
+
+  // Rotation Z input handler
   rotationZ.addEventListener('input', function() {
     const value = this.value;
     rotationZValue.textContent = value + '°';
-    updateRotation();
+    applyModelTransform();
   });
 
-  // Update rotation using model-viewer's rotation attribute
-  function updateRotation() {
-    const x = parseFloat(rotationX.value);
-    const y = parseFloat(rotationY.value);
-    const z = parseFloat(rotationZ.value);
-    // Convert to model-viewer rotation format: "X Y Z" in degrees
-    viewer.setAttribute('rotation', `${x} ${y} ${z}`);
-  }
+  // Setup transforms when model loads
+  setupModelTransforms();
+  
+  // Re-apply transforms when model changes
+  viewer.addEventListener('load', function() {
+    applyModelTransform();
+  });
 
   // Background Color
   const backgroundColor = document.getElementById('background-color');
@@ -218,13 +297,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset auto rotate delay
     autoRotateDelay.value = initialValues.autoRotateDelay;
     autoRotateDelayValue.textContent = initialValues.autoRotateDelay;
-    viewer.setAttribute('auto-rotate-delay', initialValues.autoRotateDelay + 'ms');
+    viewer.setAttribute('auto-rotate-delay', initialValues.autoRotateDelay);
 
     // Reset camera orbit
     cameraOrbit.value = '1';
     cameraOrbitValue.textContent = '1.0';
-    viewer.removeAttribute('min-camera-orbit');
-    viewer.removeAttribute('max-camera-orbit');
+    viewer.setAttribute('camera-orbit', 'auto auto 1m');
 
     // Reset AR
     arEnabled.checked = initialValues.ar;
@@ -258,7 +336,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Reset scale
     scale.value = initialValues.scale;
     scaleValue.textContent = initialValues.scale;
-    viewer.setAttribute('scale', initialValues.scale);
 
     // Reset rotation
     rotationX.value = initialValues.rotationX;
@@ -267,7 +344,9 @@ document.addEventListener('DOMContentLoaded', function() {
     rotationYValue.textContent = initialValues.rotationY + '°';
     rotationZ.value = initialValues.rotationZ;
     rotationZValue.textContent = initialValues.rotationZ + '°';
-    viewer.removeAttribute('rotation');
+    
+    // Apply the reset transforms
+    applyModelTransform();
 
     // Reset background
     backgroundColor.value = initialValues.backgroundColor;
