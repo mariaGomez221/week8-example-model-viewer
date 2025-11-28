@@ -12,13 +12,11 @@ document.addEventListener('DOMContentLoaded', function() {
     ar: viewer.hasAttribute('ar'),
     exposure: viewer.getAttribute('exposure') || '1',
     shadowIntensity: viewer.getAttribute('shadow-intensity') || '1',
-    environmentImage: viewer.getAttribute('environment-image') || 'neutral',
     scale: '1',
     rotationX: '0',
     rotationY: '0',
     rotationZ: '0',
-    backgroundColor: '#f8f8f8',
-    backgroundImage: ''
+    backgroundColor: '#f8f8f8'
   };
 
   // Model Selection
@@ -121,16 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
     viewer.setAttribute('shadow-intensity', value);
   });
 
-  // Environment Image
-  const environmentImage = document.getElementById('environment-image');
-  environmentImage.addEventListener('change', function() {
-    if (this.value) {
-      viewer.setAttribute('environment-image', this.value);
-    } else {
-      viewer.removeAttribute('environment-image');
-    }
-  });
-
   // Scale
   const scale = document.getElementById('scale');
   const scaleValue = document.getElementById('scale-value');
@@ -152,35 +140,82 @@ document.addEventListener('DOMContentLoaded', function() {
     // Wait for model-viewer to be ready
     if (!viewer.loaded) return;
     
-    // Access the Three.js scene
-    const scene = viewer.scene || viewer.model;
-    if (!scene) return;
-    
     const scaleVal = parseFloat(scale.value);
     const rotationXVal = parseFloat(rotationX.value) * (Math.PI / 180); // Convert to radians
     const rotationYVal = parseFloat(rotationY.value) * (Math.PI / 180);
     const rotationZVal = parseFloat(rotationZ.value) * (Math.PI / 180);
     
-    // Find the model in the scene (usually the first child or we traverse)
-    let model = null;
-    if (scene.children && scene.children.length > 0) {
-      // Try to find the model mesh
-      for (let child of scene.children) {
-        if (child.type === 'Group' || child.type === 'Mesh') {
-          model = child;
-          break;
-        }
-      }
-      // If no specific model found, use the first child
-      if (!model && scene.children[0]) {
-        model = scene.children[0];
-      }
-    } else if (scene.scale) {
-      // If scene itself is the model
-      model = scene;
+    // Access the Three.js scene through model-viewer's API
+    // Try multiple ways to access the scene/model
+    let scene = null;
+    if (viewer.scene) {
+      scene = viewer.scene;
+    } else if (viewer.renderer && viewer.renderer.scene) {
+      scene = viewer.renderer.scene;
+    } else if (viewer.model) {
+      scene = viewer.model;
     }
     
-    if (!model) return;
+    if (!scene) {
+      console.warn('Scene not accessible');
+      return;
+    }
+    
+    // Find the model in the scene - traverse to find the actual model mesh/group
+    let model = null;
+    
+    // Function to traverse and find the main model (skip helpers, lights, cameras)
+    function findModel(object) {
+      if (!object) return null;
+      
+      // Skip cameras, lights, and helpers
+      if (object.type === 'PerspectiveCamera' || 
+          object.type === 'DirectionalLight' || 
+          object.type === 'AmbientLight' ||
+          object.type === 'HemisphereLight' ||
+          (object.name && (object.name.toLowerCase().includes('helper') || 
+                          object.name.toLowerCase().includes('light') ||
+                          object.name.toLowerCase().includes('camera')))) {
+        return null;
+      }
+      
+      // If it's a mesh or group, it might be our model
+      if (object.type === 'Group' || object.type === 'Mesh' || object.type === 'SkinnedMesh') {
+        return object;
+      }
+      
+      // Traverse children
+      if (object.children && object.children.length > 0) {
+        for (let child of object.children) {
+          const found = findModel(child);
+          if (found) return found;
+        }
+      }
+      
+      return null;
+    }
+    
+    // Try to find the model starting from the scene
+    model = findModel(scene);
+    
+    // If not found, try a simpler approach - get the first meaningful child
+    if (!model && scene.children && scene.children.length > 0) {
+      for (let child of scene.children) {
+        if (child.type === 'Group' || child.type === 'Mesh' || child.type === 'SkinnedMesh') {
+          if (!child.name || (!child.name.toLowerCase().includes('helper') && 
+                              !child.name.toLowerCase().includes('light') &&
+                              !child.name.toLowerCase().includes('camera'))) {
+            model = child;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (!model) {
+      console.warn('Model not found for transform');
+      return;
+    }
     
     // Apply scale
     if (model.scale) {
@@ -195,11 +230,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Wait for model to load before applying transforms
   function setupModelTransforms() {
+    function tryApplyTransform() {
+      // Use setTimeout to ensure renderer is ready
+      setTimeout(() => {
+        applyModelTransform();
+      }, 100);
+    }
+    
     if (viewer.loaded) {
-      applyModelTransform();
+      tryApplyTransform();
     } else {
       viewer.addEventListener('load', function() {
-        applyModelTransform();
+        tryApplyTransform();
       });
     }
   }
@@ -208,28 +250,37 @@ document.addEventListener('DOMContentLoaded', function() {
   scale.addEventListener('input', function() {
     const value = parseFloat(this.value);
     scaleValue.textContent = value.toFixed(1);
-    applyModelTransform();
+    // Use requestAnimationFrame to ensure smooth updates
+    requestAnimationFrame(() => {
+      applyModelTransform();
+    });
   });
 
   // Rotation X input handler
   rotationX.addEventListener('input', function() {
     const value = this.value;
     rotationXValue.textContent = value + '°';
-    applyModelTransform();
+    requestAnimationFrame(() => {
+      applyModelTransform();
+    });
   });
 
   // Rotation Y input handler
   rotationY.addEventListener('input', function() {
     const value = this.value;
     rotationYValue.textContent = value + '°';
-    applyModelTransform();
+    requestAnimationFrame(() => {
+      applyModelTransform();
+    });
   });
 
   // Rotation Z input handler
   rotationZ.addEventListener('input', function() {
     const value = this.value;
     rotationZValue.textContent = value + '°';
-    applyModelTransform();
+    requestAnimationFrame(() => {
+      applyModelTransform();
+    });
   });
 
   // Setup transforms when model loads
@@ -237,7 +288,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Re-apply transforms when model changes
   viewer.addEventListener('load', function() {
-    applyModelTransform();
+    setTimeout(() => {
+      applyModelTransform();
+    }, 100);
   });
 
   // Background Color
@@ -258,18 +311,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function updateBackground() {
     const color = backgroundColor.value;
-    if (backgroundImage.value) {
-      viewer.style.background = `url(${backgroundImage.value}) center/cover, ${color}`;
-    } else {
-      viewer.style.background = color;
-    }
+    viewer.style.background = color;
   }
-
-  // Background Image
-  const backgroundImage = document.getElementById('background-image');
-  backgroundImage.addEventListener('input', function() {
-    updateBackground();
-  });
 
   // Reset Button
   const resetBtn = document.getElementById('reset-btn');
@@ -325,14 +368,6 @@ document.addEventListener('DOMContentLoaded', function() {
     shadowIntensityValue.textContent = initialValues.shadowIntensity;
     viewer.setAttribute('shadow-intensity', initialValues.shadowIntensity);
 
-    // Reset environment image
-    environmentImage.value = initialValues.environmentImage;
-    if (initialValues.environmentImage) {
-      viewer.setAttribute('environment-image', initialValues.environmentImage);
-    } else {
-      viewer.removeAttribute('environment-image');
-    }
-
     // Reset scale
     scale.value = initialValues.scale;
     scaleValue.textContent = initialValues.scale;
@@ -345,13 +380,14 @@ document.addEventListener('DOMContentLoaded', function() {
     rotationZ.value = initialValues.rotationZ;
     rotationZValue.textContent = initialValues.rotationZ + '°';
     
-    // Apply the reset transforms
-    applyModelTransform();
+    // Apply the reset transforms after a delay to ensure model is ready
+    setTimeout(() => {
+      applyModelTransform();
+    }, 200);
 
     // Reset background
     backgroundColor.value = initialValues.backgroundColor;
     backgroundColorText.value = initialValues.backgroundColor;
-    backgroundImage.value = initialValues.backgroundImage;
     viewer.style.background = initialValues.backgroundColor;
   });
 
