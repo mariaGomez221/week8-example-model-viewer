@@ -129,8 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
   const klingSection = document.querySelector('.kling-sequence-card');
   const klingImage = document.getElementById('kling-sequence-image');
-  const progressBar = document.getElementById('sequence-progress');
-  const frameDisplay = document.getElementById('sequence-frame');
   const sequenceSlider = document.getElementById('sequence-slider');
   const sequenceSliderValue = document.getElementById('sequence-slider-value');
   
@@ -164,20 +162,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const frameString = formatFrameNumber(frameNumber);
     klingImage.src = `${basePath}${frameString}.png`;
     
-    // Calculate progress as a decimal (0.0 to 1.0)
-    // Example: frame 12 out of 25 = 12/25 = 0.48 (48%)
-    const progress = frameNumber / totalFrames;
-    
-    // Update the progress bar width (convert 0-1 to 0-100%)
-    if (progressBar) {
-      progressBar.style.width = (progress * 100) + '%';
-    }
-    
-    // Update the frame number display text
-    if (frameDisplay) {
-      frameDisplay.textContent = frameNumber;
-    }
-    
     // Update the slider position to match the current frame
     if (sequenceSlider) {
       sequenceSlider.value = frameNumber;
@@ -204,12 +188,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const sectionTop = rect.top + window.scrollY;
     const sectionHeight = rect.height;
     
-    // Animation starts when: section top reaches the top of the viewport
-    // This happens when user has scrolled enough that sectionTop equals window.scrollY + windowHeight
+    // Animation starts when section enters the viewport (when section top reaches viewport bottom)
+    // This gives users time to see the animation begin
     const scrollStart = sectionTop - windowHeight;
     
-    // Animation ends when: section bottom reaches the top of the viewport
-    const scrollEnd = sectionTop + sectionHeight;
+    // Animation ends when section is still visible but before it reaches the edge
+    // We end the animation when the section top reaches 1% from the top of viewport
+    // This ensures the animation completes while the section is still clearly visible
+    const scrollEnd = sectionTop - (windowHeight * 0.01);
     
     // Total scroll distance over which animation happens
     const scrollRange = scrollEnd - scrollStart;
@@ -252,6 +238,9 @@ document.addEventListener('DOMContentLoaded', function() {
     setFrame(frameNumber);
   }
   
+  // ============================================
+  // Manual Slider Control
+  // ============================================
   // Manual slider control
   if (sequenceSlider) {
     sequenceSlider.addEventListener('input', function() {
